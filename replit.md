@@ -1,6 +1,6 @@
-# [Project name]
+# TechniConnect
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Electronics technician & shop marketplace — book repair technicians, browse electronics shops, and manage the platform via an admin panel.
 
 ## Run & Operate
 
@@ -14,23 +14,45 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
+- API: Express 5 (port varies, bound via `PORT` env var)
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
+- API codegen: Orval (from OpenAPI spec at `lib/api-spec/openapi.yaml`)
 - Build: esbuild (CJS bundle)
+- Mobile: Expo SDK 54 + Expo Router (file-based routing)
+- Admin Panel: React + Vite + Tailwind CSS + shadcn/ui
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — source of truth for all API contracts
+- `lib/api-client-react/src/generated/` — generated React Query hooks + Zod schemas
+- `lib/db/src/schema/` — Drizzle ORM table definitions
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/mobile/app/` — Expo Router screens
+- `artifacts/mobile/context/AuthContext.tsx` — auth state (token + user)
+- `artifacts/admin-panel/src/` — React admin panel
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first API: OpenAPI spec → Orval codegen → typed React Query hooks used by both mobile and admin panel.
+- JWT auth stored in AsyncStorage on mobile via `AuthContext`; admin uses localStorage.
+- PostgreSQL used (not MySQL) — Replit native DB is Postgres; Drizzle handles schema migrations.
+- Haversine formula for 50km radius location filtering in shop/technician queries.
+- Single Expo app covers all roles (user, technician, shop_owner); role-based UI shown conditionally.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Customer flow**: Browse shops & technicians nearby → view details → book → track → review
+- **Technician flow**: Set availability, location; accept bookings; manage services
+- **Shop owner flow**: Register shop, list products, manage bookings
+- **Admin panel**: Full CRUD for users, shops, technicians, bookings; revenue stats; map view
+
+## Demo Credentials
+
+- Admin: `admin@techniconnect.com` / `admin123`
+- Customer: `rahul@example.com` / `admin123`
+- Shop Owner: `priya@example.com` / `admin123`
+- Technicians: `amit@example.com`, `suresh@example.com` / `admin123`
 
 ## User preferences
 
@@ -38,7 +60,11 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- `react-native-maps` must be pinned to exactly `1.18.0`. Do NOT add it to `app.json` plugins.
+- Admin panel uses `react-leaflet` for maps. Do NOT install it in the mobile workspace.
+- Routes `/shops/my` and `/technicians/my` must be registered BEFORE `/:id` routes.
+- Never use `console.log` in server code — use `req.log` in route handlers, `logger` elsewhere.
+- Mobile workflow uses HMR — only restart when changing dependencies or hitting Metro errors.
 
 ## Pointers
 
