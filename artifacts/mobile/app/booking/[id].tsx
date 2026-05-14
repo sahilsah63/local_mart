@@ -1,9 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import {
-  useGetBooking,
-  useUpdateBookingStatus,
-  useCreateReview,
-} from "@workspace/api-client-react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
@@ -24,6 +19,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
+import { useLiveLocation } from "@/hooks/useLiveLocation";
+import { useBookingLocations, distanceKm, etaMinutes } from "../../hooks/useBookingLocation";
+import { LiveTrackingMap } from "@/components/LiveTrackingMap";
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "#f59e0b",
   confirmed: "#3b82f6",
@@ -40,7 +39,23 @@ export default function BookingDetailScreen() {
   const { user } = useAuth();
   const bookingId = Number(id);
 
-  const { data: booking, isLoading } = useGetBooking(bookingId);
+const TRACK_STATUSES = ["confirmed", "accepted", "in_progress", "en_route"];
+
+// 1) Fetch booking locations every 10s
+const { data: liveData } = useBookingLocations(
+  bookingId,
+  // Enable only if booking status is "active". Adjust per your statuses.
+  !!booking && TRACK_STATUSES.includes(booking.status)
+);
+
+// 2) Push my location every 15s while booking is active
+useLiveLocation({
+  enabled: !!booking && TRACK_STATUSES.includes(booking.status),
+  intervalMs: 15000,
+});
+
+
+  const { data: booking, isLoading } = useBookingLocations(bookingId);
   const { mutate: updateStatus } = useUpdateBookingStatus({
     mutation: {
       onSuccess: () => {
@@ -135,6 +150,52 @@ export default function BookingDetailScreen() {
             <Text style={[styles.cancelText, { color: colors.destructive }]}>Cancel Booking</Text>
           </TouchableOpacity>
         )}
+
+        {liveData && (
+  <View style={{ marginTop: 16, marginHorizontal: 16, padding: 16, borderRadius: 12, backgroundColor: "#fff", borderWidth: 1, borderColor: "#e5e7eb" }}>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+      <Text style={{ fontSize: 16, fontWeight: "700" }}>🟢 Live Tracking</Text>
+      <Text style={{ fontSize: 11, color: "#666" }}>
+        Updated {new Date(liveData.fetchedAt).toLocaleTimeString()}
+      </Text>
+    </View>
+
+    {/* Distance + ETA */}
+    {liveData.customer?.currentLat && liveData.provider?.currentLat && (() => {
+      const d = distanceKm(
+        { lat: liveData.customer.currentLat!, lng: liveData.customer.currentLng! },
+        { lat: liveData.provider.currentLat!, lng: liveData.provider.currentLng! }
+      );
+      const eta = etaMinutes(d);
+      return (
+        <View style={{ flexDirection: "row", gap: 12, marginBottom: 12 }}>
+          <Stat label="Distance" value={`${d.toFixed(1)} km`} />
+          <Stat label="ETA" value={`~${eta} min`} />
+          <Stat label="Status" value={liveData.status} />
+        </View>
+      );
+    })()}
+
+    {/* Map with both pins */}
+    <LiveTrackingMap
+      height={280}
+      points={[
+        ...(liveData.customer?.currentLat && liveData.customer?.currentLng
+          ? [{ lat: liveData.customer.currentLat, lng: liveData.customer.currentLng, label: `Customer: ${liveData.customer.name}`, color: "blue" }]
+          : []),
+        ...(liveData.provider?.currentLat && liveData.provider?.currentLng
+          ? [{ lat: liveData.provider.currentLat, lng: liveData.provider.currentLng, label: `${liveData.provider.role}: ${liveData.provider.name}`, color: "red" }]
+          : []),
+      ]}
+    />
+
+    {(!liveData.customer?.currentLat || !liveData.provider?.currentLat) && (
+      <Text style={{ marginTop: 10, fontSize: 12, color: "#666", textAlign: "center" }}>
+        Waiting for {!liveData.customer?.currentLat ? "customer" : "provider"} to share location…
+      </Text>
+    )}
+  </View>
+)}
 
         {/* Review */}
         {canReview && !showReview && (
@@ -253,3 +314,12 @@ const styles = StyleSheet.create({
   cancelReviewBtn: { flex: 1, height: 42, borderRadius: 10, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   submitBtn: { flex: 2, height: 42, borderRadius: 10, alignItems: "center", justifyContent: "center" },
 });
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ flex: 1, padding: 10, backgroundColor: "#f8fafc", borderRadius: 8 }}>
+      <Text style={{ fontSize: 11, color: "#64748b" }}>{label}</Text>
+      <Text style={{ fontSize: 14, fontWeight: "700", marginTop: 2, textTransform: "capitalize" }}>{value}</Text>
+    </View>
+  );
+}

@@ -1045,6 +1045,29 @@ paths:
                 $ref: "#/components/schemas/RevenueStats"
 
   # LOCATION
+  /location/booking/{bookingId}:
+    get:
+      operationId: getBookingLocations
+      tags: [location]
+      summary: Get live locations of both parties in a booking
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingLocations"
+        "403":
+          description: Not a participant
+        "409":
+          description: Tracking not active
+
   /location/nearby-shops:
     get:
       operationId: getNearbyShops
@@ -1138,6 +1161,41 @@ components:
         isAvailable:
           type: boolean
       required: [isAvailable]
+
+    UserLocation:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        currentLat:
+          type: number
+          nullable: true
+        currentLng:
+          type: number
+          nullable: true
+        lastLocationAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    BookingLocations:
+      type: object
+      properties:
+        bookingId:
+          type: integer
+        status:
+          type: string
+        customer:
+          $ref: "#/components/schemas/UserLocation"
+        provider:
+          $ref: "#/components/schemas/UserLocation"
+        fetchedAt:
+          type: string
+          format: date-time
 
     RegisterInput:
       type: object

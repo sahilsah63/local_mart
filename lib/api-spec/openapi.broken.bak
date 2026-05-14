@@ -1,0 +1,1925 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: TechniConnect - Electronics Technician & Shop Marketplace API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: shops
+    description: Electronics shops
+  - name: technicians
+    description: Technicians
+  - name: products
+    description: Shop products
+  - name: services
+    description: Technician services
+  - name: bookings
+    description: Bookings
+  - name: reviews
+    description: Reviews
+  - name: categories
+    description: Categories
+  - name: admin
+    description: Admin operations
+  - name: location
+    description: Location services
+
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/me/location:
+    put:
+      operationId: updateMyLocation
+      tags: [auth]
+      summary: Update current user location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # USERS
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (admin)
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /users/{id}/toggle-status:
+    put:
+      operationId: toggleUserStatus
+      tags: [users]
+      summary: Toggle user active status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # CATEGORIES
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List categories
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  # SHOPS
+  /shops:
+    get:
+      operationId: listShops
+      tags: [shops]
+      summary: List shops (with optional location filter)
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 50
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Shops
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShopListResponse"
+    post:
+      operationId: createShop
+      tags: [shops]
+      summary: Register a shop
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShopInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+
+  /shops/my:
+    get:
+      operationId: getMyShop
+      tags: [shops]
+      summary: Get current user's shop
+      responses:
+        "200":
+          description: Shop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+
+  /shops/{id}:
+    get:
+      operationId: getShop
+      tags: [shops]
+      summary: Get shop by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Shop
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+    put:
+      operationId: updateShop
+      tags: [shops]
+      summary: Update shop
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShopUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+    delete:
+      operationId: deleteShop
+      tags: [shops]
+      summary: Delete shop
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /shops/{id}/verify:
+    put:
+      operationId: verifyShop
+      tags: [shops]
+      summary: Verify/unverify shop (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shop"
+
+  # TECHNICIANS
+  /technicians:
+    get:
+      operationId: listTechnicians
+      tags: [technicians]
+      summary: List technicians (with optional location filter)
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 50
+        - name: skill
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: available
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Technicians
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnicianListResponse"
+    post:
+      operationId: createTechnicianProfile
+      tags: [technicians]
+      summary: Register as technician
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TechnicianInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+
+  /technicians/my:
+    get:
+      operationId: getMyTechnicianProfile
+      tags: [technicians]
+      summary: Get current user's technician profile
+      responses:
+        "200":
+          description: Technician
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+
+  /technicians/{id}:
+    get:
+      operationId: getTechnician
+      tags: [technicians]
+      summary: Get technician by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Technician
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+    put:
+      operationId: updateTechnician
+      tags: [technicians]
+      summary: Update technician profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TechnicianUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+    delete:
+      operationId: deleteTechnician
+      tags: [technicians]
+      summary: Delete technician profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /technicians/{id}/location:
+    put:
+      operationId: updateTechnicianLocation
+      tags: [technicians]
+      summary: Update technician live location
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+
+  /technicians/{id}/availability:
+    put:
+      operationId: updateTechnicianAvailability
+      tags: [technicians]
+      summary: Toggle technician availability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilityInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+
+  /technicians/{id}/verify:
+    put:
+      operationId: verifyTechnician
+      tags: [technicians]
+      summary: Verify/unverify technician (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Technician"
+
+  # PRODUCTS
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products
+      parameters:
+        - name: shopId
+          in: query
+          schema:
+            type: integer
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # SERVICES
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List technician services
+      parameters:
+        - name: technicianId
+          in: query
+          schema:
+            type: integer
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Create service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /services/{id}:
+    put:
+      operationId: updateService
+      tags: [services]
+      summary: Update service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+    delete:
+      operationId: deleteService
+      tags: [services]
+      summary: Delete service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # BOOKINGS
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Book a technician
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/status:
+    put:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStatusInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/location:
+    put:
+      operationId: updateBookingLocation
+      tags: [bookings]
+      summary: Update technician live location for active booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/cancel:
+    put:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # REVIEWS
+  /reviews:
+    get:
+      operationId: listReviews
+      tags: [reviews]
+      summary: List reviews for a target
+      parameters:
+        - name: targetType
+          in: query
+          schema:
+            type: string
+        - name: targetId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Create review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  # ADMIN
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get platform statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+  /location/booking/{bookingId}:
+    get:
+      operationId: getBookingLocations
+      tags: [location]
+      summary: Get live locations of both parties in a booking
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingLocations"
+        "403": { description: Not a participant }
+        "409": { description: Tracking not active }
+
+  /admin/bookings:
+    get:
+      operationId: listAllBookings
+      tags: [admin]
+      summary: List all bookings (admin)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingListResponse"
+
+  /admin/revenue:
+    get:
+      operationId: getRevenueStats
+      tags: [admin]
+      summary: Get revenue and booking trends
+      responses:
+        "200":
+          description: Revenue stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RevenueStats"
+
+  # LOCATION
+  /location/nearby-shops:
+    get:
+      operationId: getNearbyShops
+      tags: [location]
+      summary: Get nearby shops within radius
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 50
+      responses:
+        "200":
+          description: Nearby shops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShopWithDistance"
+
+  /location/nearby-technicians:
+    get:
+      operationId: getNearbyTechnicians
+      tags: [location]
+      summary: Get nearby technicians within radius
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 50
+      responses:
+        "200":
+          description: Nearby technicians
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TechnicianWithDistance"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    LocationInput:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+      required: [lat, lng]
+
+  UserLocation:
+    type: object
+    properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        currentLat:
+          type: number
+          nullable: true
+        currentLng:
+          type: number
+          nullable: true
+        lastLocationAt:
+          type: string
+          format: date-time
+          nullable: true
+
+  BookingLocations:
+    type: object
+    properties:
+        bookingId:
+          type: integer
+        status:
+          type: string
+        customer:
+          $ref: "#/components/schemas/UserLocation"
+        provider:
+          $ref: "#/components/schemas/UserLocation"
+        fetchedAt:
+          type: string
+          format: date-time
+
+    AvailabilityInput:
+      type: object
+      properties:
+        isAvailable:
+          type: boolean
+      required: [isAvailable]
+
+    RegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [user, technician, shop_owner]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        address:
+          type: ["string", "null"]
+      required: [name, email, password, role]
+
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required: [token, user]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        address:
+          type: ["string", "null"]
+        profileImage:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, name, email, role, isActive, createdAt]
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        profileImage:
+          type: string
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [users, total, page, limit]
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        type:
+          type: string
+      required: [id, name, type]
+
+    CategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+        type:
+          type: string
+          enum: [shop, technician, product]
+      required: [name, type]
+
+    Shop:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        address:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+        ratingCount:
+          type: integer
+        isVerified:
+          type: boolean
+        isActive:
+          type: boolean
+        workingHours:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        ownerName:
+          type: ["string", "null"]
+      required:
+        [
+          id,
+          ownerId,
+          name,
+          address,
+          lat,
+          lng,
+          rating,
+          ratingCount,
+          isVerified,
+          isActive,
+          createdAt,
+        ]
+
+    ShopInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        phone:
+          type: string
+        email:
+          type: string
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        workingHours:
+          type: string
+      required: [name, address, lat, lng]
+
+    ShopUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        phone:
+          type: string
+        email:
+          type: string
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        workingHours:
+          type: string
+        isActive:
+          type: boolean
+
+    ShopWithDistance:
+      allOf:
+        - $ref: "#/components/schemas/Shop"
+        - type: object
+          properties:
+            distance:
+              type: number
+          required: [distance]
+
+    ShopListResponse:
+      type: object
+      properties:
+        shops:
+          type: array
+          items:
+            $ref: "#/components/schemas/Shop"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [shops, total, page, limit]
+
+    Technician:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        bio:
+          type: ["string", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: integer
+        hourlyRate:
+          type: number
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        isAvailable:
+          type: boolean
+        rating:
+          type: number
+        ratingCount:
+          type: integer
+        isVerified:
+          type: boolean
+        isActive:
+          type: boolean
+        serviceRadius:
+          type: integer
+        profileImage:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        [
+          id,
+          userId,
+          name,
+          skills,
+          experienceYears,
+          hourlyRate,
+          isAvailable,
+          rating,
+          ratingCount,
+          isVerified,
+          isActive,
+          serviceRadius,
+          createdAt,
+        ]
+
+    TechnicianInput:
+      type: object
+      properties:
+        bio:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: integer
+        hourlyRate:
+          type: number
+        serviceRadius:
+          type: integer
+        lat:
+          type: number
+        lng:
+          type: number
+      required: [skills, experienceYears, hourlyRate]
+
+    TechnicianUpdate:
+      type: object
+      properties:
+        bio:
+          type: string
+        skills:
+          type: array
+          items:
+            type: string
+        experienceYears:
+          type: integer
+        hourlyRate:
+          type: number
+        serviceRadius:
+          type: integer
+        isActive:
+          type: boolean
+
+    TechnicianWithDistance:
+      allOf:
+        - $ref: "#/components/schemas/Technician"
+        - type: object
+          properties:
+            distance:
+              type: number
+          required: [distance]
+
+    TechnicianListResponse:
+      type: object
+      properties:
+        technicians:
+          type: array
+          items:
+            $ref: "#/components/schemas/Technician"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [technicians, total, page, limit]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        shopId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        stock:
+          type: integer
+        isActive:
+          type: boolean
+        shopName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, shopId, name, price, stock, isActive, createdAt]
+
+    ProductInput:
+      type: object
+      properties:
+        shopId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        stock:
+          type: integer
+      required: [shopId, name, price, stock]
+
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        stock:
+          type: integer
+        isActive:
+          type: boolean
+
+    ProductListResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [products, total, page, limit]
+
+    Service:
+      type: object
+      properties:
+        id:
+          type: integer
+        technicianId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        category:
+          type: ["string", "null"]
+        durationMinutes:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        [id, technicianId, name, price, durationMinutes, isActive, createdAt]
+
+    ServiceInput:
+      type: object
+      properties:
+        technicianId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        durationMinutes:
+          type: integer
+      required: [technicianId, name, price, durationMinutes]
+
+    ServiceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        durationMinutes:
+          type: integer
+        isActive:
+          type: boolean
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        technicianId:
+          type: integer
+        serviceId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [pending, accepted, in_progress, completed, cancelled]
+        scheduledAt:
+          type: ["string", "null"]
+        userLat:
+          type: ["number", "null"]
+        userLng:
+          type: ["number", "null"]
+        technicianLat:
+          type: ["number", "null"]
+        technicianLng:
+          type: ["number", "null"]
+        totalAmount:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        technicianName:
+          type: ["string", "null"]
+        serviceName:
+          type: ["string", "null"]
+        userPhone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, technicianId, status, createdAt, updatedAt]
+
+    BookingInput:
+      type: object
+      properties:
+        technicianId:
+          type: integer
+        serviceId:
+          type: integer
+        scheduledAt:
+          type: string
+        userLat:
+          type: number
+        userLng:
+          type: number
+        totalAmount:
+          type: number
+        notes:
+          type: string
+      required: [technicianId]
+
+    BookingStatusInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, accepted, in_progress, completed, cancelled]
+      required: [status]
+
+    BookingListResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required: [bookings, total, page, limit]
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        targetId:
+          type: integer
+        targetType:
+          type: string
+          enum: [technician, shop]
+        rating:
+          type: integer
+        comment:
+          type: ["string", "null"]
+        userName:
+          type: ["string", "null"]
+        userImage:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, userId, targetId, targetType, rating, createdAt]
+
+    ReviewInput:
+      type: object
+      properties:
+        targetId:
+          type: integer
+        targetType:
+          type: string
+          enum: [technician, shop]
+        rating:
+          type: integer
+        comment:
+          type: string
+      required: [targetId, targetType, rating]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalShops:
+          type: integer
+        totalTechnicians:
+          type: integer
+        totalBookings:
+          type: integer
+        activeBookings:
+          type: integer
+        completedBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        newUsersToday:
+          type: integer
+        newShopsToday:
+          type: integer
+        bookingsToday:
+          type: integer
+        verifiedShops:
+          type: integer
+        verifiedTechnicians:
+          type: integer
+      required:
+        [
+          totalUsers,
+          totalShops,
+          totalTechnicians,
+          totalBookings,
+          activeBookings,
+          completedBookings,
+          pendingBookings,
+          totalRevenue,
+          newUsersToday,
+          newShopsToday,
+          bookingsToday,
+          verifiedShops,
+          verifiedTechnicians,
+        ]
+
+    RevenueStats:
+      type: object
+      properties:
+        monthly:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              revenue:
+                type: number
+              bookings:
+                type: integer
+            required: [month, revenue, bookings]
+        bookingsByStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+            required: [status, count]
+        topTechnicians:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              bookings:
+                type: integer
+              revenue:
+                type: number
+              rating:
+                type: number
+            required: [id, name, bookings, revenue, rating]
+      required: [monthly, bookingsByStatus, topTechnicians]

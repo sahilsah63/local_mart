@@ -25,6 +25,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
+import { LiveTrackingMap } from "@/components/LiveTrackingMap";
 
 export default function ShopDetailScreen() {
   const colors = useColors();
@@ -35,8 +36,12 @@ export default function ShopDetailScreen() {
   const shopId = Number(id);
 
   const { data: shop, isLoading } = useGetShop(shopId);
-  const { data: productsData } = useListProducts({ query: { params: { shopId, limit: 20 } } });
-  const { data: reviewsData } = useListReviews({ query: { params: { shopId, limit: 10 } } });
+  const { data: productsData } = useListProducts({
+    query: { params: { shopId, limit: 20 } },
+  });
+  const { data: reviewsData } = useListReviews({
+    query: { params: { shopId, limit: 10 } },
+  });
   const { mutate: createBooking, isPending: booking } = useCreateBooking({
     mutation: {
       onSuccess: () => {
@@ -79,14 +84,18 @@ export default function ShopDetailScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 32 }}
+      contentContainerStyle={{
+        paddingBottom: Platform.OS === "web" ? 34 : insets.bottom + 32,
+      }}
       showsVerticalScrollIndicator={false}
     >
       {/* Cover */}
       <View style={[styles.cover, { backgroundColor: colors.primary + "20" }]}>
         <Feather name="shopping-bag" size={64} color={colors.primary} />
         {shop.isVerified && (
-          <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
+          <View
+            style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}
+          >
             <Feather name="check" size={12} color="#fff" />
             <Text style={styles.verifiedText}>Verified</Text>
           </View>
@@ -95,50 +104,76 @@ export default function ShopDetailScreen() {
 
       <View style={styles.body}>
         {/* Name & Rating */}
-        <Text style={[styles.name, { color: colors.foreground }]}>{shop.name}</Text>
+        <Text style={[styles.name, { color: colors.foreground }]}>
+          {shop.name}
+        </Text>
         <RatingStars rating={shop.rating} count={shop.ratingCount} size={16} />
 
         {/* Info Pills */}
         <View style={styles.infoRow}>
           {shop.phone && (
-            <View style={[styles.infoPill, { backgroundColor: colors.secondary }]}>
+            <View
+              style={[styles.infoPill, { backgroundColor: colors.secondary }]}
+            >
               <Feather name="phone" size={13} color={colors.primary} />
-              <Text style={[styles.infoPillText, { color: colors.foreground }]}>{shop.phone}</Text>
+              <Text style={[styles.infoPillText, { color: colors.foreground }]}>
+                {shop.phone}
+              </Text>
             </View>
           )}
           {shop.workingHours && (
-            <View style={[styles.infoPill, { backgroundColor: colors.secondary }]}>
+            <View
+              style={[styles.infoPill, { backgroundColor: colors.secondary }]}
+            >
               <Feather name="clock" size={13} color={colors.primary} />
-              <Text style={[styles.infoPillText, { color: colors.foreground }]}>{shop.workingHours}</Text>
+              <Text style={[styles.infoPillText, { color: colors.foreground }]}>
+                {shop.workingHours}
+              </Text>
             </View>
           )}
         </View>
 
         {/* Address */}
-        <View style={[styles.addressBox, { backgroundColor: colors.muted, borderRadius: 10 }]}>
+        <View
+          style={[
+            styles.addressBox,
+            { backgroundColor: colors.muted, borderRadius: 10 },
+          ]}
+        >
           <Feather name="map-pin" size={16} color={colors.primary} />
-          <Text style={[styles.addressText, { color: colors.foreground }]}>{shop.address}</Text>
+          <Text style={[styles.addressText, { color: colors.foreground }]}>
+            {shop.address}
+          </Text>
         </View>
 
         {/* Description */}
         {shop.description && (
-          <Text style={[styles.desc, { color: colors.mutedForeground }]}>{shop.description}</Text>
+          <Text style={[styles.desc, { color: colors.mutedForeground }]}>
+            {shop.description}
+          </Text>
         )}
 
         {/* Book Button */}
         <TouchableOpacity
-          style={[styles.bookBtn, { backgroundColor: colors.primary, opacity: booking ? 0.7 : 1 }]}
+          style={[
+            styles.bookBtn,
+            { backgroundColor: colors.primary, opacity: booking ? 0.7 : 1 },
+          ]}
           onPress={handleBook}
           disabled={booking}
         >
           <Feather name="calendar" size={18} color="#fff" />
-          <Text style={styles.bookBtnText}>{booking ? "Booking..." : "Book a Visit"}</Text>
+          <Text style={styles.bookBtnText}>
+            {booking ? "Booking..." : "Book a Visit"}
+          </Text>
         </TouchableOpacity>
 
         {/* Products */}
         {products.length > 0 && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Products</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Products
+            </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {products.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -147,19 +182,57 @@ export default function ShopDetailScreen() {
           </>
         )}
 
+        {shop?.lat && shop?.lng && (
+          <View style={{ marginTop: 16, marginHorizontal: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", marginBottom: 8 }}>
+              Location
+            </Text>
+            <LiveTrackingMap
+              height={200}
+              points={[
+                {
+                  lat: shop.lat,
+                  lng: shop.lng,
+                  label: shop.name,
+                  color: "red",
+                },
+              ]}
+            />
+          </View>
+        )}
+
         {/* Reviews */}
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Reviews</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+          Reviews
+        </Text>
         {reviews.length === 0 ? (
-          <Text style={[styles.noReviews, { color: colors.mutedForeground }]}>No reviews yet.</Text>
+          <Text style={[styles.noReviews, { color: colors.mutedForeground }]}>
+            No reviews yet.
+          </Text>
         ) : (
           reviews.map((rev) => (
-            <View key={rev.id} style={[styles.reviewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View
+              key={rev.id}
+              style={[
+                styles.reviewCard,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
               <View style={styles.reviewHeader}>
-                <Text style={[styles.reviewName, { color: colors.foreground }]}>{rev.userName ?? "User"}</Text>
+                <Text style={[styles.reviewName, { color: colors.foreground }]}>
+                  {rev.userName ?? "User"}
+                </Text>
                 <RatingStars rating={rev.rating} size={12} />
               </View>
               {rev.comment && (
-                <Text style={[styles.reviewComment, { color: colors.mutedForeground }]}>{rev.comment}</Text>
+                <Text
+                  style={[
+                    styles.reviewComment,
+                    { color: colors.mutedForeground },
+                  ]}
+                >
+                  {rev.comment}
+                </Text>
               )}
             </View>
           ))
@@ -183,21 +256,61 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 12,
   },
-  verifiedText: { color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  verifiedText: {
+    color: "#fff",
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
   body: { padding: 16, gap: 12 },
   name: { fontSize: 24, fontFamily: "Inter_700Bold" },
   infoRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  infoPill: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  infoPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
   infoPillText: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  addressBox: { flexDirection: "row", alignItems: "flex-start", padding: 12, gap: 8 },
-  addressText: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  addressBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    padding: 12,
+    gap: 8,
+  },
+  addressText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 20,
+  },
   desc: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 22 },
-  bookBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", height: 52, borderRadius: 14, gap: 8 },
+  bookBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 52,
+    borderRadius: 14,
+    gap: 8,
+  },
   bookBtnText: { fontSize: 16, fontFamily: "Inter_600SemiBold", color: "#fff" },
   sectionTitle: { fontSize: 18, fontFamily: "Inter_700Bold", marginTop: 8 },
-  noReviews: { fontSize: 14, fontFamily: "Inter_400Regular", fontStyle: "italic" },
+  noReviews: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    fontStyle: "italic",
+  },
   reviewCard: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 6 },
-  reviewHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  reviewHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   reviewName: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  reviewComment: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  reviewComment: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 20,
+  },
 });

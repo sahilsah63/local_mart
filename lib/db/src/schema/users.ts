@@ -14,6 +14,9 @@ export const usersTable = pgTable("users", {
   address: text("address"),
   profileImage: text("profile_image"),
   isActive: boolean("is_active").notNull().default(true),
+  currentLat: doublePrecision("current_lat"),
+  currentLng: doublePrecision("current_lng"),
+  lastLocationAt: timestamp("last_location_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
