@@ -33,7 +33,7 @@ import { useColors } from "@/hooks/useColors";
 // const API_HOST = Platform.OS === "web"
 //   ? "http://127.0.0.1:5000"           
 //   : "http://172.20.10.12:5000";       
-const API_HOST = process.env.EXPO_PUBLIC_DOMAIN || "https://local-mart-7zzt.onrender.com";
+const API_HOST = process.env.EXPO_PUBLIC_DOMAIN || "https://local-mart-7zzt.onrender.com/api";
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
