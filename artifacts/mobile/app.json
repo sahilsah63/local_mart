@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
@@ -16,14 +16,25 @@
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.sahilsamson2.mobile"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
-       ["expo-location", {
-        "locationAlwaysAndWhenInUsePermission": "Allow TechniConnect to find nearby shops and technicians."
-      }],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow TechniConnect to find nearby shops and technicians."
+        }
+      ],
       [
         "expo-router",
         {
@@ -36,6 +47,17 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3f7b1a07-ea50-4637-93a2-4ee46da05171"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3f7b1a07-ea50-4637-93a2-4ee46da05171"
     }
   }
 }

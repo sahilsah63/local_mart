@@ -49,17 +49,20 @@ export default function Products() {
       { id },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListProductsQueryKey(queryParams) });
+          queryClient.invalidateQueries({
+            queryKey: getListProductsQueryKey(queryParams),
+          });
           toast({ title: "Product deleted" });
         },
-      }
+      },
     );
   };
 
   const products = data?.products || [];
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.shopName && p.shopName.toLowerCase().includes(search.toLowerCase()))
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.shopName && p.shopName.toLowerCase().includes(search.toLowerCase())),
   );
 
   return (
@@ -67,7 +70,9 @@ export default function Products() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Products</h2>
-          <p className="text-muted-foreground">Manage marketplace inventory from verified shops.</p>
+          <p className="text-muted-foreground">
+            Manage marketplace inventory from verified shops.
+          </p>
         </div>
       </div>
 
@@ -98,13 +103,19 @@ export default function Products() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   Loading products...
                 </TableCell>
               </TableRow>
             ) : filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No products found.
                 </TableCell>
               </TableRow>
@@ -113,28 +124,56 @@ export default function Products() {
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0">
-                        <Package2 className="w-4 h-4 text-muted-foreground" />
-                      </div>
+                      {product.images?.[0] ? (
+                        <img
+                          src={product.images[0].replace(
+                            "/upload/",
+                            "/upload/w_80,h_80,c_fill,q_auto,f_auto/",
+                            
+                          )}
+                          alt={product.name}
+                          className="w-10 h-10 rounded object-cover shrink-0 border cursor-pointer hover:opacity-80 transition"
+                          onClick={() => window.open(product.images?.[0], "_blank")}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                          <Package2 className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
                       <div className="flex flex-col">
-                        <span className="font-semibold text-primary line-clamp-1">{product.name}</span>
-                        <span className="text-xs text-muted-foreground">{product.category || "Uncategorized"}</span>
+                        <span className="font-semibold text-primary line-clamp-1">
+                          {product.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {product.category || "Uncategorized"}
+                        </span>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-medium">{product.shopName || `Shop #${product.shopId}`}</span>
+                    <span className="text-sm font-medium">
+                      {product.shopName || `Shop #${product.shopId}`}
+                    </span>
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium">${product.price.toFixed(2)}</span>
+                    <span className="font-medium">₹{product.price.toFixed(2)}</span>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={product.stock > 10 ? "outline" : product.stock > 0 ? "secondary" : "destructive"} className="font-mono">
+                    <Badge
+                      variant={
+                        product.stock > 10
+                          ? "outline"
+                          : product.stock > 0
+                            ? "secondary"
+                            : "destructive"
+                      }
+                      className="font-mono"
+                    >
                       {product.stock} in stock
                     </Badge>
                   </TableCell>
                   <TableCell>
-                     <Badge variant={product.isActive ? "default" : "secondary"}>
+                    <Badge variant={product.isActive ? "default" : "secondary"}>
                       {product.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>

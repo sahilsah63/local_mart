@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { Platform } from "react-native";
 const TOKEN_KEY = "tc_auth_token";
 
 function getBaseUrl(): string {
-  // Same as setBaseUrl in _layout.tsx
-  return "http://127.0.0.1:5000";
+  return process.env.EXPO_PUBLIC_API_URL ??
+    (Platform.OS === "web"
+      ? "http://127.0.0.1:5000"
+      : "http://192.168.X.X:5000");
 }
 
 export async function apiFetch<T = any>(

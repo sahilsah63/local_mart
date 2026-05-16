@@ -11,6 +11,7 @@ import bookingsRouter from "./bookings.js";
 import reviewsRouter from "./reviews.js";
 import adminRouter from "./admin.js";
 import locationRouter from "./location.js";
+import uploadsRouter from "./uploads.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/bookings", bookingsRouter);
 router.use("/reviews", reviewsRouter);
 router.use("/admin", adminRouter);
 router.use("/location", locationRouter);
+router.use("/uploads", uploadsRouter);
 
 export default router;

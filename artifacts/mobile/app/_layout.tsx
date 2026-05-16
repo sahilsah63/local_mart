@@ -13,6 +13,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Constants from "expo-constants";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/context/AuthContext";
@@ -28,12 +29,14 @@ import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
+      
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (Platform.OS === "web"
+    ? "http://127.0.0.1:5000"
+    : "http://192.168.X.X:5000");
 
-
-// const API_HOST = Platform.OS === "web"
-//   ? "http://127.0.0.1:5000"           
-//   : "http://172.20.10.12:5000";       
-const API_HOST = process.env.EXPO_PUBLIC_DOMAIN || "https://local-mart-7zzt.onrender.com/api";
+setBaseUrl(API_URL);
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
@@ -179,6 +182,7 @@ function RootLayoutNav() {
       <Stack.Screen name="shop/product" options={{ title: "My Products" }} />
       <Stack.Screen name="shop/product-form" options={{ title: "Product Details" }} />
       <Stack.Screen name="+not-found" />
+      <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
     </Stack>
   );
 }

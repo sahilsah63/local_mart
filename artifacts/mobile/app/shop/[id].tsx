@@ -9,7 +9,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
+  Image,
   Alert,
+  Dimensions,
   Platform,
   ScrollView,
   StyleSheet,
@@ -18,6 +20,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+
 
 import { ProductCard } from "@/components/ProductCard";
 import { RatingStars } from "@/components/RatingStars";
@@ -91,7 +95,19 @@ export default function ShopDetailScreen() {
     >
       {/* Cover */}
       <View style={[styles.cover, { backgroundColor: colors.primary + "20" }]}>
-        <Feather name="shopping-bag" size={64} color={colors.primary} />
+        {shop.images?.[0] ? (
+          <Image
+            source={{
+              uri: shop.images[0].replace(
+                "/upload/",
+                "/upload/w_800,h_400,c_fill/",
+              ),
+            }}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : (
+          <Feather name="shopping-bag" size={64} color={colors.primary} />
+        )}
         {shop.isVerified && (
           <View
             style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}
@@ -171,15 +187,40 @@ export default function ShopDetailScreen() {
         {/* Products */}
         {products.length > 0 && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-              Products
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.productHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                Products
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                {products.length} item{products.length !== 1 ? "s" : ""}
+              </Text>
+            </View>
+            <View style={styles.productGrid}>
               {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  width={(Dimensions.get("window").width - 44) / 2}
+                  onPress={() => router.push(`/product/${p.id}`)}
+                />
               ))}
-            </ScrollView>
+            </View>
           </>
+        )}
+
+        {products.length === 0 && (
+          <View style={{ alignItems: "center", paddingVertical: 32 }}>
+            <Feather name="package" size={48} color={colors.mutedForeground} />
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                marginTop: 8,
+                fontSize: 13,
+              }}
+            >
+              No products listed yet
+            </Text>
+          </View>
         )}
 
         {shop?.lat && shop?.lng && (
@@ -255,6 +296,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
+  },
+  productGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  productHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
   },
   verifiedText: {
     color: "#fff",
